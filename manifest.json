@@ -1,21 +1,20 @@
 {
-  "name": "Dota 2 Heroes",
-  "short_name": "DotaHeroes",
-  "start_url": "./",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#007bff",
-  "icons": [
+    "name": "bin2dec-v1",
+    "start_url": ".",
+    "display": "standalone",
+    "theme_color": "#f8fcfa",
+    "background_color": "#f8fcfa",
+    "icons": [
       {
-          "src": "img/icons8-dota-2-192.png",
-          "sizes": "192x192",
-          "type": "image/png"
+        "src": "icons/dota192.png",
+        "type": "image/png",
+        "sizes": "192x192"
       },
       {
-          "src": "img/icons8-dota-2-512.png",
-          "sizes": "512x512",
-          "type": "image/png"
+        "src": "icons/dota512.png",
+        "type": "image/png",
+        "sizes": "512x512",
+        "purpose": "maskable"
       }
-      
-  ]
-}
+    ]
+  }
