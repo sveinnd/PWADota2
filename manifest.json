@@ -1,6 +1,7 @@
 {
     "name": "pdota-v1",
-    "start_url": ".",
+    "short_name": "Dota",
+    "start_url": "./",
     "display": "standalone",
     "theme_color": "#f8fcfa",
     "background_color": "#f8fcfa",
