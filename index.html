@@ -5,21 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dota 2 Heroes</title>
 
-  <!-- Manifest & Bootstrap -->
   <link rel="manifest" href="manifest.json" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"/>
-
-  <!-- Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet"/>
-
-  <!-- Meta Theme Color -->
-  <meta name="theme-color" content="#121212" />
-
   <style>
     body {
       background-color: #f8f9fa;
       color: #212529;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .card-img-top {
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .hero-card {
+      margin-bottom: 20px;
     }
 
     @media (prefers-color-scheme: dark) {
@@ -32,82 +33,115 @@
         background-color: #1e1e1e;
         color: #ffffff;
       }
-
-      footer {
-        color: #aaa;
-      }
-    }
-
-    h1 {
-      font-family: 'Orbitron', sans-serif;
-      font-weight: 600;
-      text-shadow: 1px 1px 4px rgba(0,0,0,0.3);
-    }
-
-    .hero-card {
-      margin-bottom: 20px;
-      transition: transform 0.3s ease;
-    }
-
-    .hero-card:hover {
-      transform: scale(1.03);
-    }
-
-    .card-img-top {
-      height: 200px;
-      object-fit: cover;
     }
 
     footer {
       margin-top: 50px;
       text-align: center;
       font-size: 0.9rem;
+      color: #888;
     }
 
-    .form-control {
-      max-width: 400px;
+    .btn-outline-danger, .btn-outline-success, .btn-outline-primary {
+      margin: 0 5px 5px;
     }
+
+    .btn-outline-dark, .btn-outline-secondary {
+      margin: 3px;
+    }
+
+    .filter-attr:hover img {
+    filter: none;
+    transform: scale(1.1);
+  }
   </style>
 </head>
 <body>
   <div class="container mt-4">
     <h1 class="text-center mb-4">Dota 2 Heroes</h1>
 
-    <!-- Search Input -->
-    <div class="mb-3 text-center">
-      <input type="text" id="searchInput" class="form-control" placeholder="Search heroes...">
+    <!-- Filter by Primary Attribute -->
+  <!-- Filter by Primary Attribute (pakai ikon) -->
+<div class="text-center mb-3">
+  <button class="btn btn-outline-secondary filter-attr" data-attr="str">
+    <img src="icons/str.png" width="24" alt="STR">
+  </button>
+  <button class="btn btn-outline-secondary filter-attr" data-attr="agi">
+    <img src="icons/agi.png" width="24" alt="AGI">
+  </button>
+  <button class="btn btn-outline-secondary filter-attr" data-attr="int">
+    <img src="icons/int.png" width="24" alt="INT">
+  </button>
+  <button class="btn btn-outline-secondary filter-attr" data-attr="all">
+    <img src="icons/universal.png" width="24" alt="Universal">
+  </button>
+</div>
+
+
+
+    <!-- Filter by Role -->
+    <div class="text-center mb-3">
+      <button class="btn btn-sm btn-outline-dark filter-role" data-role="Carry">Carry</button>
+      <button class="btn btn-sm btn-outline-dark filter-role" data-role="Support">Support</button>
+      <button class="btn btn-sm btn-outline-dark filter-role" data-role="Nuker">Nuker</button>
+      <button class="btn btn-sm btn-outline-dark filter-role" data-role="Disabler">Disabler</button>
+      <button class="btn btn-sm btn-outline-secondary filter-role" data-role="All">Reset</button>
     </div>
 
-    <!-- Loading Spinner -->
-    <div id="loading" class="text-center my-5">
-      <div class="spinner-border text-primary" role="status"></div>
+    <!-- Search Bar -->
+    <div class="mb-3 text-center">
+      <input type="text" id="searchInput" class="form-control w-50 mx-auto" placeholder="Search heroes...">
     </div>
 
     <!-- Hero Cards -->
     <div id="hero-container" class="row mt-3"></div>
   </div>
 
-  <footer class="text-muted">Made with ❤️ by Akidna | Powered by OpenDota</footer>
+  <footer>Made with ❤️ by Akidna | Powered by OpenDota</footer>
 
   <script>
     const apiUrl = "https://api.opendota.com/api/heroes";
     const heroContainer = document.getElementById("hero-container");
     let allHeroes = [];
 
+    let currentAttr = "all";
+    let currentRole = "All";
+    let currentSearch = "";
+
     async function fetchHeroes() {
-      document.getElementById("loading").style.display = "block";
       try {
         const response = await fetch(apiUrl);
         if (!response.ok) throw new Error("Failed to fetch heroes");
         const heroes = await response.json();
         allHeroes = heroes;
-        displayHeroes(heroes);
+        applyFilters();
       } catch (error) {
         console.error(error);
         heroContainer.innerHTML = `<p class="text-danger">Failed to load heroes. Please try again later.</p>`;
-      } finally {
-        document.getElementById("loading").style.display = "none";
       }
+    }
+
+    function applyFilters() {
+      let filtered = allHeroes;
+
+      // Filter by attribute
+      if (currentAttr !== "all") {
+        filtered = filtered.filter(h => h.primary_attr === currentAttr);
+      }
+
+      // Filter by role
+      if (currentRole !== "All") {
+        filtered = filtered.filter(h => h.roles.includes(currentRole));
+      }
+
+      // Search
+      if (currentSearch !== "") {
+        filtered = filtered.filter(h =>
+          h.localized_name.toLowerCase().includes(currentSearch)
+        );
+      }
+
+      displayHeroes(filtered);
     }
 
     function displayHeroes(heroes) {
@@ -121,7 +155,9 @@
               <div class="card-body">
                 <h5 class="card-title">${hero.localized_name}</h5>
                 <p class="card-text">
-                  <strong>Primary:</strong> ${hero.primary_attr.toUpperCase()}<br>
+                  <strong>Primary:</strong> ${
+  hero.primary_attr === "all" ? "UNIVERSAL" : hero.primary_attr.toUpperCase()
+}
                   <strong>Attack:</strong> ${hero.attack_type}<br>
                   <strong>Roles:</strong> ${hero.roles.join(", ")}
                 </p>
@@ -132,13 +168,23 @@
       }).join("");
     }
 
-    // 🔍 Search event
     document.getElementById("searchInput").addEventListener("input", (e) => {
-      const keyword = e.target.value.toLowerCase();
-      const filtered = allHeroes.filter(hero =>
-        hero.localized_name.toLowerCase().includes(keyword)
-      );
-      displayHeroes(filtered);
+      currentSearch = e.target.value.toLowerCase();
+      applyFilters();
+    });
+
+    document.querySelectorAll(".filter-attr").forEach(btn => {
+      btn.addEventListener("click", () => {
+        currentAttr = btn.dataset.attr;
+        applyFilters();
+      });
+    });
+
+    document.querySelectorAll(".filter-role").forEach(btn => {
+      btn.addEventListener("click", () => {
+        currentRole = btn.dataset.role;
+        applyFilters();
+      });
     });
 
     fetchHeroes();
