@@ -4,56 +4,42 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dota 2 Heroes</title>
-
-  <link rel="manifest" href="manifest.json" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link rel="manifest" href="manifest.json">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
   <style>
     body {
-      background-color: #f8f9fa;
-      color: #212529;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
-    .card-img-top {
-      height: 200px;
-      object-fit: cover;
+      background-color: #111;
+      color: white;
     }
 
     .hero-card {
       margin-bottom: 20px;
     }
 
-    @media (prefers-color-scheme: dark) {
-      body {
-        background-color: #121212;
-        color: #ffffff;
-      }
-
-      .card {
-        background-color: #1e1e1e;
-        color: #ffffff;
-      }
+    .filter-attr img {
+      width: 24px;
+      filter: grayscale(100%);
+      transition: 0.2s ease;
     }
 
-    footer {
-      margin-top: 50px;
-      text-align: center;
-      font-size: 0.9rem;
-      color: #888;
+    .filter-attr:hover img,
+    .filter-attr.active img {
+      filter: none;
+      transform: scale(1.1);
     }
 
-    .btn-outline-danger, .btn-outline-success, .btn-outline-primary {
-      margin: 0 5px 5px;
+    .card {
+      background-color: #1e1e1e;
+      border: none;
     }
 
-    .btn-outline-dark, .btn-outline-secondary {
-      margin: 3px;
+    .card-title {
+      font-weight: bold;
     }
 
-    .filter-attr:hover img {
-    filter: none;
-    transform: scale(1.1);
-  }
+    .btn.filter-role {
+      margin: 2px;
+    }
   </style>
 </head>
 <body>
@@ -61,115 +47,114 @@
     <h1 class="text-center mb-4">Dota 2 Heroes</h1>
 
     <!-- Filter by Primary Attribute -->
-  <!-- Filter by Primary Attribute (pakai ikon) -->
-<div class="text-center mb-3">
-  <button class="btn btn-outline-secondary filter-attr" data-attr="str">
-    <img src="icons/str.png" width="24" alt="STR">
-  </button>
-  <button class="btn btn-outline-secondary filter-attr" data-attr="agi">
-    <img src="icons/agi.png" width="24" alt="AGI">
-  </button>
-  <button class="btn btn-outline-secondary filter-attr" data-attr="int">
-    <img src="icons/int.png" width="24" alt="INT">
-  </button>
-  <button class="btn btn-outline-secondary filter-attr" data-attr="all">
-    <img src="icons/universal.png" width="24" alt="Universal">
-  </button>
-</div>
+    <div class="text-center mb-2">
+      <button class="btn btn-outline-secondary filter-attr" data-attr="str">
+        <img src="icons/str.png" alt="STR">
+      </button>
+      <button class="btn btn-outline-secondary filter-attr" data-attr="agi">
+        <img src="icons/agi.png" alt="AGI">
+      </button>
+      <button class="btn btn-outline-secondary filter-attr" data-attr="int">
+        <img src="icons/int.png" alt="INT">
+      </button>
+      <button class="btn btn-outline-secondary filter-attr" data-attr="all">
+        <img src="icons/universal.png" alt="Universal">
+      </button>
+      <button class="btn btn-outline-danger reset-filters ms-2">Reset</button>
+    </div>
 
-
-
-    <!-- Filter by Role -->
+    <!-- Filter by Roles -->
     <div class="text-center mb-3">
-      <button class="btn btn-sm btn-outline-dark filter-role" data-role="Carry">Carry</button>
-      <button class="btn btn-sm btn-outline-dark filter-role" data-role="Support">Support</button>
-      <button class="btn btn-sm btn-outline-dark filter-role" data-role="Nuker">Nuker</button>
-      <button class="btn btn-sm btn-outline-dark filter-role" data-role="Disabler">Disabler</button>
-      <button class="btn btn-sm btn-outline-secondary filter-role" data-role="All">Reset</button>
+      <button class="btn btn-outline-light filter-role" data-role="Carry">Carry</button>
+      <button class="btn btn-outline-light filter-role" data-role="Support">Support</button>
+      <button class="btn btn-outline-light filter-role" data-role="Nuker">Nuker</button>
+      <button class="btn btn-outline-light filter-role" data-role="Disabler">Disabler</button>
     </div>
 
-    <!-- Search Bar -->
-    <div class="mb-3 text-center">
-      <input type="text" id="searchInput" class="form-control w-50 mx-auto" placeholder="Search heroes...">
+    <!-- Search -->
+    <div class="d-flex justify-content-center mb-4">
+      <input type="text" id="searchInput" class="form-control w-50" placeholder="Search heroes...">
     </div>
 
-    <!-- Hero Cards -->
-    <div id="hero-container" class="row mt-3"></div>
+    <!-- Heroes Container -->
+    <div id="hero-container" class="row"></div>
   </div>
-
-  <footer>Made with ❤️ by Akidna | Powered by OpenDota</footer>
 
   <script>
     const apiUrl = "https://api.opendota.com/api/heroes";
     const heroContainer = document.getElementById("hero-container");
-    let allHeroes = [];
-
-    let currentAttr = "all";
-    let currentRole = "All";
-    let currentSearch = "";
+    const searchInput = document.getElementById("searchInput");
+    let heroesData = [];
+    let currentAttr = null;
+    let currentRole = null;
+    let searchQuery = "";
 
     async function fetchHeroes() {
       try {
         const response = await fetch(apiUrl);
-        if (!response.ok) throw new Error("Failed to fetch heroes");
-        const heroes = await response.json();
-        allHeroes = heroes;
+        const data = await response.json();
+        heroesData = data;
         applyFilters();
       } catch (error) {
-        console.error(error);
-        heroContainer.innerHTML = `<p class="text-danger">Failed to load heroes. Please try again later.</p>`;
+        console.error("Failed to fetch heroes:", error);
+        heroContainer.innerHTML = `<p class="text-danger">Failed to load heroes. Try again later.</p>`;
       }
     }
 
     function applyFilters() {
-      let filtered = allHeroes;
+      let filtered = [...heroesData];
 
-      // Filter by attribute
-      if (currentAttr !== "all") {
+      if (currentAttr) {
         filtered = filtered.filter(h => h.primary_attr === currentAttr);
       }
 
-      // Filter by role
-      if (currentRole !== "All") {
+      if (currentRole) {
         filtered = filtered.filter(h => h.roles.includes(currentRole));
       }
 
-      // Search
-      if (currentSearch !== "") {
+      if (searchQuery.trim() !== "") {
         filtered = filtered.filter(h =>
-          h.localized_name.toLowerCase().includes(currentSearch)
+          h.localized_name.toLowerCase().includes(searchQuery.toLowerCase())
         );
       }
 
       displayHeroes(filtered);
+      updateFilterButtons();
     }
 
     function displayHeroes(heroes) {
-      heroContainer.innerHTML = heroes.map(hero => {
-        const heroName = hero.name.replace("npc_dota_hero_", "").toLowerCase();
-        const imageUrl = `assets/heroes/${heroName}.png`;
-        return `
-          <div class="col-md-4 hero-card">
-            <div class="card shadow-sm rounded h-100">
-              <img src="${imageUrl}" class="card-img-top" alt="${hero.localized_name}">
-              <div class="card-body">
-                <h5 class="card-title">${hero.localized_name}</h5>
-                <p class="card-text">
-                  <strong>Primary:</strong> ${hero.primary_attr === "all" ? "UNIVERSAL" : hero.primary_attr.toUpperCase()}
-                  <strong>Attack:</strong> ${hero.attack_type}<br>
-                  <strong>Roles:</strong> ${hero.roles.join(", ")}
-                </p>
-              </div>
+      heroContainer.innerHTML = heroes.map(hero => `
+        <div class="col-md-4 hero-card">
+          <div class="card">
+            <img src="assets/heroes/${hero.name.replace("npc_dota_hero_", "")}.png" class="card-img-top" alt="${hero.localized_name}">
+            <div class="card-body">
+              <h5 class="card-title">${hero.localized_name}</h5>
+              <p class="card-text">
+                <strong>Primary:</strong> ${hero.primary_attr === "all" ? "UNIVERSAL" : hero.primary_attr.toUpperCase()}<br>
+                <strong>Attack:</strong> ${hero.attack_type}<br>
+                <strong>Roles:</strong> ${hero.roles.join(", ")}
+              </p>
             </div>
           </div>
-        `;
-      }).join("");
+        </div>
+      `).join("");
     }
 
-    document.getElementById("searchInput").addEventListener("input", (e) => {
-      currentSearch = e.target.value.toLowerCase();
-      applyFilters();
-    });
+    function updateFilterButtons() {
+      document.querySelectorAll(".filter-attr").forEach(btn => {
+        btn.classList.remove("active");
+        if (btn.dataset.attr === currentAttr) {
+          btn.classList.add("active");
+        }
+      });
+
+      document.querySelectorAll(".filter-role").forEach(btn => {
+        btn.classList.remove("active");
+        if (btn.dataset.role === currentRole) {
+          btn.classList.add("active");
+        }
+      });
+    }
 
     document.querySelectorAll(".filter-attr").forEach(btn => {
       btn.addEventListener("click", () => {
@@ -185,16 +170,28 @@
       });
     });
 
+    document.querySelector(".reset-filters").addEventListener("click", () => {
+      currentAttr = null;
+      currentRole = null;
+      searchQuery = "";
+      searchInput.value = "";
+      applyFilters();
+    });
+
+    searchInput.addEventListener("input", (e) => {
+      searchQuery = e.target.value;
+      applyFilters();
+    });
+
     fetchHeroes();
   </script>
 
-  <!-- Service Worker -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register("service-worker.js")
-          .then(reg => console.log('Service Worker registered:', reg))
-          .catch(err => console.error('Service Worker registration failed:', err));
+          .then(reg => console.log("SW registered:", reg))
+          .catch(err => console.error("SW failed:", err));
       });
     }
   </script>
