@@ -47,8 +47,9 @@
       transform: scale(1.1);
     }
 
-    .theme-toggle button {
-      margin: 0 4px;
+    .theme-toggle button,
+    .filter-role button {
+      margin: 0 4px 8px;
     }
   </style>
 </head>
@@ -64,7 +65,7 @@
     </div>
 
     <!-- Filter Attribute -->
-    <div class="text-center mb-2">
+    <div class="text-center mb-3">
       <button class="btn btn-outline-secondary filter-attr" data-attr="str">
         <img src="icons/str.png" alt="STR">
       </button>
@@ -78,6 +79,20 @@
         <img src="icons/universal.png" alt="Universal">
       </button>
       <button class="btn btn-outline-danger reset-filters ms-2">Reset</button>
+    </div>
+
+    <!-- Filter Role -->
+    <div class="text-center filter-role mb-3">
+      <button class="btn btn-outline-primary role-btn" data-role="Carry">Carry</button>
+      <button class="btn btn-outline-primary role-btn" data-role="Support">Support</button>
+      <button class="btn btn-outline-primary role-btn" data-role="Nuker">Nuker</button>
+      <button class="btn btn-outline-primary role-btn" data-role="Disabler">Disabler</button>
+      <button class="btn btn-outline-primary role-btn" data-role="Jungler">Jungler</button>
+      <button class="btn btn-outline-primary role-btn" data-role="Durable">Durable</button>
+      <button class="btn btn-outline-primary role-btn" data-role="Escape">Escape</button>
+      <button class="btn btn-outline-primary role-btn" data-role="Pusher">Pusher</button>
+      <button class="btn btn-outline-primary role-btn" data-role="Initiator">Initiator</button>
+      <button class="btn btn-outline-primary role-btn" data-role="Complexity">Complexity</button>
     </div>
 
     <!-- Search -->
@@ -95,6 +110,7 @@
     const searchInput = document.getElementById("searchInput");
     let heroesData = [];
     let currentAttr = null;
+    let currentRole = null;
     let searchQuery = "";
 
     async function fetchHeroes() {
@@ -112,6 +128,9 @@
 
       if (currentAttr) {
         filtered = filtered.filter(h => h.primary_attr === currentAttr);
+      }
+      if (currentRole) {
+        filtered = filtered.filter(h => h.roles.includes(currentRole));
       }
       if (searchQuery) {
         filtered = filtered.filter(h => h.localized_name.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -145,6 +164,13 @@
           btn.classList.add("active");
         }
       });
+
+      document.querySelectorAll(".role-btn").forEach(btn => {
+        btn.classList.remove("active");
+        if (btn.dataset.role === currentRole) {
+          btn.classList.add("active");
+        }
+      });
     }
 
     document.querySelectorAll(".filter-attr").forEach(btn => {
@@ -154,8 +180,16 @@
       });
     });
 
+    document.querySelectorAll(".role-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        currentRole = btn.dataset.role;
+        applyFilters();
+      });
+    });
+
     document.querySelector(".reset-filters").addEventListener("click", () => {
       currentAttr = null;
+      currentRole = null;
       searchQuery = "";
       searchInput.value = "";
       applyFilters();
