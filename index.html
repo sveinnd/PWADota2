@@ -63,11 +63,20 @@
       text-align: center;
       font-size: 0.9rem;
     }
+
+    .form-control {
+      max-width: 400px;
+    }
   </style>
 </head>
 <body>
   <div class="container mt-4">
     <h1 class="text-center mb-4">Dota 2 Heroes</h1>
+
+    <!-- Search Input -->
+    <div class="mb-3 text-center">
+      <input type="text" id="searchInput" class="form-control" placeholder="Search heroes...">
+    </div>
 
     <!-- Loading Spinner -->
     <div id="loading" class="text-center my-5">
@@ -78,11 +87,12 @@
     <div id="hero-container" class="row mt-3"></div>
   </div>
 
-  <footer class="text-muted">Made with ❤️ by Akidna | Powered by OpenDota & Dotabase</footer>
+  <footer class="text-muted">Made with ❤️ by Akidna | Powered by OpenDota</footer>
 
   <script>
     const apiUrl = "https://api.opendota.com/api/heroes";
     const heroContainer = document.getElementById("hero-container");
+    let allHeroes = [];
 
     async function fetchHeroes() {
       document.getElementById("loading").style.display = "block";
@@ -90,6 +100,7 @@
         const response = await fetch(apiUrl);
         if (!response.ok) throw new Error("Failed to fetch heroes");
         const heroes = await response.json();
+        allHeroes = heroes;
         displayHeroes(heroes);
       } catch (error) {
         console.error(error);
@@ -120,6 +131,15 @@
         `;
       }).join("");
     }
+
+    // 🔍 Search event
+    document.getElementById("searchInput").addEventListener("input", (e) => {
+      const keyword = e.target.value.toLowerCase();
+      const filtered = allHeroes.filter(hero =>
+        hero.localized_name.toLowerCase().includes(keyword)
+      );
+      displayHeroes(filtered);
+    });
 
     fetchHeroes();
   </script>
