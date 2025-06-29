@@ -2,18 +2,37 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dota 2 Heroes</title>
   <link rel="manifest" href="manifest.json">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
   <style>
+    :root {
+      --bg-color: #111;
+      --text-color: #fff;
+      --card-bg: #1e1e1e;
+    }
+
     body {
-      background-color: #111;
-      color: white;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: none;
+      transition: 0.3s ease;
     }
 
     .hero-card {
       margin-bottom: 20px;
+      animation: fadeIn 0.6s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .filter-attr img {
@@ -28,17 +47,8 @@
       transform: scale(1.1);
     }
 
-    .card {
-      background-color: #1e1e1e;
-      border: none;
-    }
-
-    .card-title {
-      font-weight: bold;
-    }
-
-    .btn.filter-role {
-      margin: 2px;
+    .theme-toggle button {
+      margin: 0 4px;
     }
   </style>
 </head>
@@ -46,7 +56,14 @@
   <div class="container mt-4">
     <h1 class="text-center mb-4">Dota 2 Heroes</h1>
 
-    <!-- Filter by Primary Attribute -->
+    <!-- Toggle Theme -->
+    <div class="text-center theme-toggle mb-3">
+      <button class="btn btn-secondary theme-btn" data-theme="normal">Normal</button>
+      <button class="btn btn-success theme-btn" data-theme="radiant">Radiant</button>
+      <button class="btn btn-danger theme-btn" data-theme="dire">Dire</button>
+    </div>
+
+    <!-- Filter Attribute -->
     <div class="text-center mb-2">
       <button class="btn btn-outline-secondary filter-attr" data-attr="str">
         <img src="icons/str.png" alt="STR">
@@ -63,20 +80,12 @@
       <button class="btn btn-outline-danger reset-filters ms-2">Reset</button>
     </div>
 
-    <!-- Filter by Roles -->
-    <div class="text-center mb-3">
-      <button class="btn btn-outline-light filter-role" data-role="Carry">Carry</button>
-      <button class="btn btn-outline-light filter-role" data-role="Support">Support</button>
-      <button class="btn btn-outline-light filter-role" data-role="Nuker">Nuker</button>
-      <button class="btn btn-outline-light filter-role" data-role="Disabler">Disabler</button>
-    </div>
-
     <!-- Search -->
     <div class="d-flex justify-content-center mb-4">
       <input type="text" id="searchInput" class="form-control w-50" placeholder="Search heroes...">
     </div>
 
-    <!-- Heroes Container -->
+    <!-- Hero Container -->
     <div id="hero-container" class="row"></div>
   </div>
 
@@ -86,18 +95,15 @@
     const searchInput = document.getElementById("searchInput");
     let heroesData = [];
     let currentAttr = null;
-    let currentRole = null;
     let searchQuery = "";
 
     async function fetchHeroes() {
       try {
         const response = await fetch(apiUrl);
-        const data = await response.json();
-        heroesData = data;
+        heroesData = await response.json();
         applyFilters();
       } catch (error) {
-        console.error("Failed to fetch heroes:", error);
-        heroContainer.innerHTML = `<p class="text-danger">Failed to load heroes. Try again later.</p>`;
+        console.error(error);
       }
     }
 
@@ -107,17 +113,9 @@
       if (currentAttr) {
         filtered = filtered.filter(h => h.primary_attr === currentAttr);
       }
-
-      if (currentRole) {
-        filtered = filtered.filter(h => h.roles.includes(currentRole));
+      if (searchQuery) {
+        filtered = filtered.filter(h => h.localized_name.toLowerCase().includes(searchQuery.toLowerCase()));
       }
-
-      if (searchQuery.trim() !== "") {
-        filtered = filtered.filter(h =>
-          h.localized_name.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-      }
-
       displayHeroes(filtered);
       updateFilterButtons();
     }
@@ -126,7 +124,7 @@
       heroContainer.innerHTML = heroes.map(hero => `
         <div class="col-md-4 hero-card">
           <div class="card">
-            <img src="assets/heroes/${hero.name.replace("npc_dota_hero_", "")}.png" class="card-img-top" alt="${hero.localized_name}">
+            <img src="assets/heroes/${hero.name.replace('npc_dota_hero_', '')}.png" class="card-img-top" alt="${hero.localized_name}">
             <div class="card-body">
               <h5 class="card-title">${hero.localized_name}</h5>
               <p class="card-text">
@@ -147,13 +145,6 @@
           btn.classList.add("active");
         }
       });
-
-      document.querySelectorAll(".filter-role").forEach(btn => {
-        btn.classList.remove("active");
-        if (btn.dataset.role === currentRole) {
-          btn.classList.add("active");
-        }
-      });
     }
 
     document.querySelectorAll(".filter-attr").forEach(btn => {
@@ -163,16 +154,8 @@
       });
     });
 
-    document.querySelectorAll(".filter-role").forEach(btn => {
-      btn.addEventListener("click", () => {
-        currentRole = btn.dataset.role;
-        applyFilters();
-      });
-    });
-
     document.querySelector(".reset-filters").addEventListener("click", () => {
       currentAttr = null;
-      currentRole = null;
       searchQuery = "";
       searchInput.value = "";
       applyFilters();
@@ -181,6 +164,28 @@
     searchInput.addEventListener("input", (e) => {
       searchQuery = e.target.value;
       applyFilters();
+    });
+
+    document.querySelectorAll(".theme-btn").forEach(button => {
+      button.addEventListener("click", () => {
+        const theme = button.dataset.theme;
+        switch (theme) {
+          case "radiant":
+            document.documentElement.style.setProperty('--bg-color', '#e0f7e9');
+            document.documentElement.style.setProperty('--text-color', '#033b2c');
+            document.documentElement.style.setProperty('--card-bg', '#c9f2db');
+            break;
+          case "dire":
+            document.documentElement.style.setProperty('--bg-color', '#2c0000');
+            document.documentElement.style.setProperty('--text-color', '#ffdddd');
+            document.documentElement.style.setProperty('--card-bg', '#520000');
+            break;
+          default:
+            document.documentElement.style.setProperty('--bg-color', '#111');
+            document.documentElement.style.setProperty('--text-color', '#fff');
+            document.documentElement.style.setProperty('--card-bg', '#1e1e1e');
+        }
+      });
     });
 
     fetchHeroes();
