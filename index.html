@@ -155,9 +155,7 @@
               <div class="card-body">
                 <h5 class="card-title">${hero.localized_name}</h5>
                 <p class="card-text">
-                  <strong>Primary:</strong> ${
-  hero.primary_attr === "all" ? "UNIVERSAL" : hero.primary_attr.toUpperCase()
-}
+                  <strong>Primary:</strong> ${hero.primary_attr === "all" ? "UNIVERSAL" : hero.primary_attr.toUpperCase()}
                   <strong>Attack:</strong> ${hero.attack_type}<br>
                   <strong>Roles:</strong> ${hero.roles.join(", ")}
                 </p>
