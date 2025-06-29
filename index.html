@@ -102,7 +102,7 @@
     function displayHeroes(heroes) {
       heroContainer.innerHTML = heroes.map(hero => {
         const heroName = hero.name.replace("npc_dota_hero_", "").toLowerCase();
-        const imageUrl = `https://dotabase.dillerm.io/images/heroes/${heroName}/full.png`;
+        const imageUrl = `assets/heroes/${heroName}.png`;
         return `
           <div class="col-md-4 hero-card">
             <div class="card shadow-sm rounded h-100">
